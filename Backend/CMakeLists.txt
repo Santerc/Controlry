@@ -1,5 +1,5 @@
 # 设置最低CMake版本要求
-cmake_minimum_required(VERSION 3.31)
+cmake_minimum_required(VERSION 3.11)
 
 # 项目名称和版本
 project(motor_control VERSION 1.0.0 LANGUAGES CXX)
@@ -9,11 +9,36 @@ set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
-# MinGW 编译选项
-add_compile_options(-Wall -Wextra -Wpedantic)
+# 编译器特定选项
+if(MSVC)
+    # MSVC 编译选项
+    add_compile_options(/W4 /MP /utf-8)
+    # 禁用特定警告
+    add_compile_options(/wd4819 /wd4251)
+else()
+    # MinGW/其他编译器选项
+    add_compile_options(-Wall -Wextra -Wpedantic)
+endif()
 
 # 设置为控制台应用程序
-set(CMAKE_WIN32_EXECUTABLE FALSE)
+if(MSVC)
+    set(CMAKE_WIN32_EXECUTABLE FALSE)
+    add_compile_definitions(_CONSOLE)
+else()
+    set(CMAKE_WIN32_EXECUTABLE FALSE)
+endif()
+
+# 字符集设置
+if(MSVC)
+    add_compile_definitions(UNICODE _UNICODE)
+endif()
+
+# 调试信息格式
+if(MSVC)
+    set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} /Zi")
+else()
+    set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -g")
+endif()
 
 # 设置输出目录
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)

@@ -9,7 +9,7 @@
 std::atomic<bool> g_running{false};
 std::atomic<float> g_targetTorque{1.5f};
 
-PIDController SpeedController(0.3f, 0.02f, 0.0f, -10.0f, 10.0f, 1.0f);
+PIDController SpeedController(0.6f, 0.02f, 0.0f, -10.0f, 10.0f, 1.0f);
 
 void torqueUpdateLoop() {
     using clock = std::chrono::high_resolution_clock;
