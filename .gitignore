@@ -1,0 +1,54 @@
+# Unity项目忽略
+[Ll]ibrary/
+[Tt]emp/
+[Oo]bj/
+[Bb]uild/
+[Bb]uilds/
+[Ll]ogs/
+[Uu]ser[Ss]ettings/
+
+# Unity工程文件
+*.pidb.meta
+*.pdb.meta
+*.mdb.meta
+
+# Unity3D 生成的meta文件
+*.pidb.meta
+*.pdb.meta
+*.mdb.meta
+sysinfo.txt
+
+# Builds
+*.apk
+*.aab
+*.unitypackage
+*.app
+
+# Crashlytics 生成的文件
+crashlytics-build.properties
+
+# CMake忽略
+CMakeLists.txt.user
+CMakeCache.txt
+CMakeFiles
+CMakeScripts
+Testing
+Makefile
+cmake_install.cmake
+install_manifest.txt
+compile_commands.json
+CTestTestfile.cmake
+_deps
+build/
+out/
+cmake-build-debug/
+
+# IDE相关
+.vs/
+.idea/
+*.swp
+*.swo
+*.suo
+*.user
+*.userprefs
+*.sln.docstates
