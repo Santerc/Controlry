@@ -46,14 +46,18 @@ set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 
 # 添加源文件
-file(GLOB_RECURSE SOURCES "src/*.cpp" "example/*.cpp" "User/src/*.cpp")
-file(GLOB_RECURSE HEADERS "include/*.h" "include/*.hpp" "User/include/*.h" "User/include/*.hpp")
+file(GLOB_RECURSE SOURCES "src/*.cpp" "example/*.cpp" "User/src/*.cpp" "Tools/src/*.cpp")
+file(GLOB_RECURSE HEADERS "include/*.h" "include/*.hpp" "User/include/*.h" "User/include/*.hpp" "Tools/include/*.h")
 
 # 创建可执行文件
 add_executable(${PROJECT_NAME} ${SOURCES} ${HEADERS} User/src/PidController.cpp)
 
 # 添加头文件目录
-target_include_directories(${PROJECT_NAME} PRIVATE include User)
+target_include_directories(${PROJECT_NAME} PRIVATE include User Tools)
 
 # 添加 WinSock2 库
 target_link_libraries(${PROJECT_NAME} PRIVATE ws2_32)
+
+if(WIN32)
+    target_link_libraries(${PROJECT_NAME} PRIVATE comctl32 user32 gdi32)
+endif()
