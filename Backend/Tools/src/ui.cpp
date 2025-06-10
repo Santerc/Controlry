@@ -182,71 +182,147 @@ void VariableEditor::renderImGui() {
                                   ImGuiWindowFlags_NoScrollbar |
                                   ImGuiWindowFlags_NoScrollWithMouse;
 
+    // 应用现代macOS风格
+    ImGuiStyle& style = ImGui::GetStyle();
+
+    // 圆角设置 - macOS风格更加圆润
+    style.WindowRounding = 0.0f;  // 窗口不需要圆角，因为外部窗口已有边框
+    style.FrameRounding = 6.0f;   // 控件圆角
+    style.GrabRounding = 6.0f;    // 滑块圆角
+    style.PopupRounding = 6.0f;   // 弹出窗口圆角
+    style.ScrollbarRounding = 6.0f; // 滚动条圆角
+
+    // 间距和边距 - macOS的间距更加紧凑但有呼吸感
+    style.WindowPadding = ImVec2(20, 20);
+    style.ItemSpacing = ImVec2(8, 8);
+    style.FramePadding = ImVec2(8, 4);
+    style.ItemInnerSpacing = ImVec2(6, 6);
+    style.TouchExtraPadding = ImVec2(0, 0);
+
+    // 边框和滚动条
+    style.ScrollbarSize = 12.0f;
+    style.FrameBorderSize = 0.0f;  // macOS控件通常没有明显边框
+    style.WindowBorderSize = 0.0f;
+
+    // macOS Big Sur/Monterey风格配色
+    ImVec4* colors = style.Colors;
+
+    // 窗口背景 - 浅灰色背景带微弱蓝调
+    colors[ImGuiCol_WindowBg] = ImVec4(0.96f, 0.96f, 0.98f, 1.00f);
+
+    // 控件颜色 - 更现代的灰度
+    colors[ImGuiCol_FrameBg] = ImVec4(0.92f, 0.92f, 0.94f, 1.00f);          // 输入框背景
+    colors[ImGuiCol_FrameBgHovered] = ImVec4(0.90f, 0.90f, 0.92f, 1.00f);   // 悬停时
+    colors[ImGuiCol_FrameBgActive] = ImVec4(0.88f, 0.88f, 0.90f, 1.00f);    // 活动时
+
+    // 主题色 - macOS的蓝色
+    colors[ImGuiCol_Button] = ImVec4(0.00f, 0.48f, 0.98f, 1.00f);           // macOS蓝
+    colors[ImGuiCol_ButtonHovered] = ImVec4(0.10f, 0.53f, 0.98f, 1.00f);    // 稍亮
+    colors[ImGuiCol_ButtonActive] = ImVec4(0.00f, 0.42f, 0.85f, 1.00f);     // 稍暗
+
+    // 滑块颜色
+    colors[ImGuiCol_SliderGrab] = ImVec4(0.00f, 0.48f, 0.98f, 1.00f);       // macOS蓝
+    colors[ImGuiCol_SliderGrabActive] = ImVec4(0.10f, 0.53f, 0.98f, 1.00f); // 稍亮
+
+    // 文字颜色 - macOS的文字颜色更深
+    colors[ImGuiCol_Text] = ImVec4(0.12f, 0.12f, 0.12f, 1.00f);             // 近黑色
+    colors[ImGuiCol_TextDisabled] = ImVec4(0.60f, 0.60f, 0.60f, 1.00f);     // 灰色
+
+    // 分隔线和其他元素
+    colors[ImGuiCol_Separator] = ImVec4(0.88f, 0.88f, 0.88f, 0.60f);        // 更淡的分隔线
+    colors[ImGuiCol_CheckMark] = ImVec4(0.00f, 0.48f, 0.98f, 1.00f);        // macOS蓝
+
     if (ImGui::Begin("##Content", nullptr, window_flags)) {
         float windowWidth = ImGui::GetWindowSize().x;
 
-        // 内容标题
+        // 标题 - 使用SF Pro风格（苹果默认字体）
         float titleWidth = ImGui::CalcTextSize("变量编辑器").x;
         ImGui::SetCursorPosX((windowWidth - titleWidth) * 0.5f);
-        ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.00f, 0.45f, 0.90f, 1.00f));
+        ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.00f, 0.48f, 0.98f, 1.00f)); // macOS蓝
         ImGui::Text("变量编辑器");
         ImGui::PopStyleColor();
 
         ImGui::Spacing();
+
+        // 更精致的分隔线
+        ImGui::PushStyleColor(ImGuiCol_Separator, ImVec4(0.88f, 0.88f, 0.90f, 0.5f));
         ImGui::Separator();
+        ImGui::PopStyleColor();
+
         ImGui::Spacing();
 
-        // 变量编辑部分
+        // 变量编辑部分 - 更紧凑的macOS风格布局
         for (auto& var : variables_) {
             ImGui::PushID(&var);
 
-            // 变量名
+            // 变量名 - 使用SF Pro文本风格
             ImGui::AlignTextToFramePadding();
             ImGui::Text("%s", var.name.c_str());
 
             ImGui::SameLine();
 
-            // 控件
+            // 控件 - macOS风格控件更宽
             float controlWidth = ImGui::GetContentRegionAvail().x * 0.7f;
             ImGui::SetNextItemWidth(controlWidth);
 
             bool changed = false;
             switch (var.type) {
-                case InputType::SLIDER:
+                case InputType::SLIDER: {
+                    // macOS风格滑块
                     changed = ImGui::SliderFloat("##slider", &var.tempValue, var.min, var.max, "%.2f");
                     break;
-                case InputType::DRAG:
+                }
+                case InputType::DRAG: {
+                    // macOS风格拖动控件
+                    ImGui::PushStyleVar(ImGuiStyleVar_GrabMinSize, 8.0f);
                     changed = ImGui::DragFloat("##drag", &var.tempValue, var.step, var.min, var.max, "%.2f");
+                    ImGui::PopStyleVar();
                     break;
-                case InputType::INPUT_BOX:
+                }
+                case InputType::INPUT_BOX: {
+                    // macOS风格输入框
                     changed = ImGui::InputFloat("##input", &var.tempValue, var.step, var.step * 10.0f, "%.2f");
                     if (changed) {
                         var.tempValue = std::max(var.min, std::min(var.tempValue, var.max));
                     }
                     break;
+                }
             }
 
-            // 范围信息
+            // 范围信息 - macOS风格的辅助文本
             ImGui::SameLine();
+            ImGui::PushStyleColor(ImGuiCol_TextDisabled, ImVec4(0.50f, 0.50f, 0.50f, 1.00f)); // 更淡的灰色
             ImGui::TextDisabled("[%.1f-%.1f]", var.min, var.max);
+            ImGui::PopStyleColor();
 
             ImGui::PopID();
+
+            // 添加微妙的间隔
+            ImGui::Spacing();
         }
 
         ImGui::Spacing();
-        ImGui::Separator();
         ImGui::Spacing();
 
-        // 应用按钮
+        // macOS风格分隔线
+        ImGui::PushStyleColor(ImGuiCol_Separator, ImVec4(0.88f, 0.88f, 0.90f, 0.5f));
+        ImGui::Separator();
+        ImGui::PopStyleColor();
+
+        ImGui::Spacing();
+        ImGui::Spacing();
+
+        // macOS风格按钮 - 更圆润，有轻微渐变效果
         float buttonWidth = 120;
-        float buttonHeight = 30;
+        float buttonHeight = 28; // macOS按钮通常不太高
         ImGui::SetCursorPosX((windowWidth - buttonWidth) * 0.5f);
 
-        ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.00f, 0.45f, 0.90f, 1.00f));
-        ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.00f, 0.50f, 0.95f, 1.00f));
-        ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0.00f, 0.40f, 0.85f, 1.00f));
-        ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1.00f, 1.00f, 1.00f, 1.00f));
-        ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 6.0f);
+        // 使用macOS风格的按钮颜色和样式
+        ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.00f, 0.48f, 0.98f, 1.00f));        // macOS蓝
+        ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.10f, 0.53f, 0.98f, 1.00f)); // 稍亮
+        ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0.00f, 0.42f, 0.85f, 1.00f));  // 稍暗
+        ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1.00f, 1.00f, 1.00f, 1.00f));          // 白色文字
+        ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 6.0f);                            // macOS按钮更圆
 
         if (ImGui::Button("应用修改", ImVec2(buttonWidth, buttonHeight))) {
             applyChanges();
@@ -256,7 +332,7 @@ void VariableEditor::renderImGui() {
         ImGui::PopStyleVar();
         ImGui::PopStyleColor(4);
 
-        // 显示应用成功消息
+        // 显示应用成功消息 - macOS风格的成功提示
         if (changesApplied_) {
             static float messageTimer = 0.0f;
             messageTimer += ImGui::GetIO().DeltaTime;
@@ -265,7 +341,7 @@ void VariableEditor::renderImGui() {
                 ImGui::Spacing();
                 float msgWidth = ImGui::CalcTextSize("✓ 已应用").x;
                 ImGui::SetCursorPosX((windowWidth - msgWidth) * 0.5f);
-                ImGui::TextColored(ImVec4(0.00f, 0.60f, 0.00f, 1.00f), "✓ 已应用");
+                ImGui::TextColored(ImVec4(0.00f, 0.65f, 0.00f, 1.00f), "✓ 已应用"); // macOS绿色
             } else {
                 changesApplied_ = false;
                 messageTimer = 0.0f;
@@ -274,6 +350,7 @@ void VariableEditor::renderImGui() {
     }
     ImGui::End();
 }
+
 
 
 void VariableEditor::applyChanges() {
