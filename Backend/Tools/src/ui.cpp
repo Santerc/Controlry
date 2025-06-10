@@ -45,10 +45,17 @@ void VariableEditor::setTheme(int themeId) {
 }
 
 void VariableEditor::show() {
-    // 创建应用窗口
+    // 创建可拖动的窗口
     WNDCLASSEXW wc = { sizeof(wc), CS_CLASSDC, WndProc, 0L, 0L, GetModuleHandle(nullptr), nullptr, nullptr, nullptr, nullptr, L"ImGui Variable Editor", nullptr };
     ::RegisterClassExW(&wc);
-    HWND hwnd = ::CreateWindowW(wc.lpszClassName, L"变量编辑器", WS_OVERLAPPEDWINDOW, 100, 100, 400, 400, nullptr, nullptr, wc.hInstance, nullptr);
+
+    // 创建普通窗口，带有标准边框和标题栏，可以拖动
+    HWND hwnd = ::CreateWindowW(
+        wc.lpszClassName, L"变量编辑器",
+        WS_OVERLAPPEDWINDOW,  // 使用标准窗口样式，包含标题栏和边框
+        100, 100, 400, 400,
+        nullptr, nullptr, wc.hInstance, nullptr
+    );
 
     // 初始化 Direct3D
     if (!CreateDeviceD3D(hwnd)) {
@@ -65,51 +72,61 @@ void VariableEditor::show() {
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
     ImGuiIO& io = ImGui::GetIO(); (void)io;
-    io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;     // 启用键盘控制
-    // io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;         // 启用停靠功能
+    io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
 
-    // 设置 ImGui 风格
-    switch (themeId_) {
-        case 0:
-            ImGui::StyleColorsDark();
+    // 尝试加载黑体字体
+    io.Fonts->Clear();
+    bool fontLoaded = false;
+    const char* fontPaths[] = {
+        "C:\\Windows\\Fonts\\simhei.ttf",
+        "C:\\Windows\\Fonts\\msyh.ttc",
+        "C:\\Windows\\Fonts\\simsun.ttc"
+    };
+
+    for (const char* path : fontPaths) {
+        if (ImFont* font = io.Fonts->AddFontFromFileTTF(path, 16.0f, nullptr, io.Fonts->GetGlyphRangesChineseFull())) {
+            fontLoaded = true;
             break;
-        case 1:
-            ImGui::StyleColorsLight();
-            break;
-        default:
-            ImGui::StyleColorsClassic();
-            break;
+        }
     }
+
+    if (!fontLoaded) {
+        io.Fonts->AddFontDefault();
+    }
+
+    // 设置风格
+    ImGui::StyleColorsDark();
+
+    // 应用苹果风格
+    ImGuiStyle& style = ImGui::GetStyle();
+    style.WindowRounding = 0.0f;  // 不需要圆角，因为外部窗口已经有边框
+    style.FrameRounding = 5.0f;
+    style.GrabRounding = 5.0f;
+    style.PopupRounding = 5.0f;
+    style.ScrollbarRounding = 5.0f;
+    style.WindowPadding = ImVec2(10, 10);
+    style.ItemSpacing = ImVec2(8, 10);
+    style.FramePadding = ImVec2(10, 6);
+
+    // 苹果风格配色
+    ImVec4* colors = style.Colors;
+    colors[ImGuiCol_WindowBg] = ImVec4(0.98f, 0.98f, 0.98f, 1.00f);
+    colors[ImGuiCol_FrameBg] = ImVec4(0.93f, 0.94f, 0.95f, 1.00f);
+    colors[ImGuiCol_FrameBgHovered] = ImVec4(0.90f, 0.91f, 0.92f, 1.00f);
+    colors[ImGuiCol_FrameBgActive] = ImVec4(0.87f, 0.88f, 0.89f, 1.00f);
+    colors[ImGuiCol_Button] = ImVec4(0.00f, 0.45f, 0.90f, 1.00f);
+    colors[ImGuiCol_ButtonHovered] = ImVec4(0.00f, 0.50f, 0.95f, 1.00f);
+    colors[ImGuiCol_ButtonActive] = ImVec4(0.00f, 0.40f, 0.85f, 1.00f);
+    colors[ImGuiCol_SliderGrab] = ImVec4(0.00f, 0.45f, 0.90f, 1.00f);
+    colors[ImGuiCol_SliderGrabActive] = ImVec4(0.00f, 0.50f, 0.95f, 1.00f);
+    colors[ImGuiCol_Text] = ImVec4(0.10f, 0.10f, 0.10f, 1.00f);
+    colors[ImGuiCol_TextDisabled] = ImVec4(0.60f, 0.60f, 0.60f, 1.00f);
+    colors[ImGuiCol_Separator] = ImVec4(0.85f, 0.85f, 0.85f, 1.00f);
+    colors[ImGuiCol_CheckMark] = ImVec4(0.00f, 0.45f, 0.90f, 1.00f);
 
     // 设置平台/渲染器后端
     ImGui_ImplWin32_Init(hwnd);
     ImGui_ImplDX11_Init(g_pd3dDevice, g_pd3dDeviceContext);
-
-    // 应用自定义样式
-    ImGuiStyle& style = ImGui::GetStyle();
-    style.WindowRounding = 8.0f;
-    style.FrameRounding = 4.0f;
-    style.GrabRounding = 4.0f;
-    style.PopupRounding = 4.0f;
-    style.ScrollbarRounding = 4.0f;
-    style.TabRounding = 4.0f;
-    style.WindowPadding = ImVec2(10, 10);
-    style.ItemSpacing = ImVec2(8, 8);
-    style.FramePadding = ImVec2(8, 4);
-
-    // 设置颜色
-    if (themeId_ == 0) {  // 深色主题增强
-        ImVec4* colors = style.Colors;
-        colors[ImGuiCol_WindowBg] = ImVec4(0.10f, 0.10f, 0.10f, 0.94f);
-        colors[ImGuiCol_Header] = ImVec4(0.20f, 0.20f, 0.20f, 0.55f);
-        colors[ImGuiCol_HeaderHovered] = ImVec4(0.26f, 0.26f, 0.26f, 0.80f);
-        colors[ImGuiCol_HeaderActive] = ImVec4(0.30f, 0.30f, 0.30f, 1.00f);
-        colors[ImGuiCol_Button] = ImVec4(0.24f, 0.40f, 0.95f, 1.00f);
-        colors[ImGuiCol_ButtonHovered] = ImVec4(0.33f, 0.50f, 0.95f, 1.00f);
-        colors[ImGuiCol_ButtonActive] = ImVec4(0.21f, 0.30f, 0.90f, 1.00f);
-        colors[ImGuiCol_SliderGrab] = ImVec4(0.24f, 0.40f, 0.95f, 1.00f);
-        colors[ImGuiCol_SliderGrabActive] = ImVec4(0.33f, 0.50f, 0.95f, 1.00f);
-    }
 
     // 主循环
     MSG msg;
@@ -126,17 +143,17 @@ void VariableEditor::show() {
         ImGui_ImplWin32_NewFrame();
         ImGui::NewFrame();
 
-        // 渲染编辑器窗口
+        // 渲染编辑器内容 - 使用无边框窗口填满整个客户区
         renderImGui();
 
         // 渲染
         ImGui::Render();
-        const float clear_color_with_alpha[4] = { 0.0f, 0.0f, 0.0f, 1.0f };
+        const float clear_color_with_alpha[4] = { 0.98f, 0.98f, 0.98f, 1.0f };
         g_pd3dDeviceContext->OMSetRenderTargets(1, &g_mainRenderTargetView, nullptr);
         g_pd3dDeviceContext->ClearRenderTargetView(g_mainRenderTargetView, clear_color_with_alpha);
         ImGui_ImplDX11_RenderDrawData(ImGui::GetDrawData());
 
-        g_pSwapChain->Present(1, 0); // 垂直同步
+        g_pSwapChain->Present(1, 0);
     }
 
     // 清理
@@ -150,49 +167,70 @@ void VariableEditor::show() {
 }
 
 void VariableEditor::renderImGui() {
-    ImGui::SetNextWindowSize(ImVec2(400, 400), ImGuiCond_FirstUseEver);
-    ImGui::SetNextWindowPos(ImVec2(100, 100), ImGuiCond_FirstUseEver);
+    // 获取窗口尺寸
+    ImGuiIO& io = ImGui::GetIO();
 
-    if (ImGui::Begin("变量编辑器", &showWindow_, ImGuiWindowFlags_NoCollapse)) {
-        ImGui::Text("调整变量值");
+    // 创建一个无边框窗口，填满整个客户区
+    ImGui::SetNextWindowPos(ImVec2(0, 0));
+    ImGui::SetNextWindowSize(io.DisplaySize);
+
+    ImGuiWindowFlags window_flags = ImGuiWindowFlags_NoTitleBar |
+                                  ImGuiWindowFlags_NoCollapse |
+                                  ImGuiWindowFlags_NoResize |
+                                  ImGuiWindowFlags_NoMove |
+                                  ImGuiWindowFlags_NoBringToFrontOnFocus |
+                                  ImGuiWindowFlags_NoScrollbar |
+                                  ImGuiWindowFlags_NoScrollWithMouse;
+
+    if (ImGui::Begin("##Content", nullptr, window_flags)) {
+        float windowWidth = ImGui::GetWindowSize().x;
+
+        // 内容标题
+        float titleWidth = ImGui::CalcTextSize("变量编辑器").x;
+        ImGui::SetCursorPosX((windowWidth - titleWidth) * 0.5f);
+        ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.00f, 0.45f, 0.90f, 1.00f));
+        ImGui::Text("变量编辑器");
+        ImGui::PopStyleColor();
+
         ImGui::Spacing();
         ImGui::Separator();
         ImGui::Spacing();
 
-        bool valuesChanged = false;
-
+        // 变量编辑部分
         for (auto& var : variables_) {
             ImGui::PushID(&var);
 
-            // 显示变量名称
+            // 变量名
+            ImGui::AlignTextToFramePadding();
             ImGui::Text("%s", var.name.c_str());
 
-            // 根据类型创建不同的控件
-            bool changed = false;
-
-            if (var.type == InputType::SLIDER) {
-                changed = ImGui::SliderFloat("##slider", &var.tempValue, var.min, var.max, "%.2f");
-            } else if (var.type == InputType::DRAG) {
-                changed = ImGui::DragFloat("##drag", &var.tempValue, var.step, var.min, var.max, "%.2f");
-            } else if (var.type == InputType::INPUT_BOX) {
-                changed = ImGui::InputFloat("##input", &var.tempValue, var.step, var.step * 10.0f, "%.2f");
-
-                // 限制范围
-                if (changed) {
-                    var.tempValue = std::max(var.min, std::min(var.tempValue, var.max));
-                }
-            }
-
-            // 显示范围信息
             ImGui::SameLine();
-            ImGui::TextDisabled("[%.1f - %.1f]", var.min, var.max);
 
-            if (changed) {
-                valuesChanged = true;
+            // 控件
+            float controlWidth = ImGui::GetContentRegionAvail().x * 0.7f;
+            ImGui::SetNextItemWidth(controlWidth);
+
+            bool changed = false;
+            switch (var.type) {
+                case InputType::SLIDER:
+                    changed = ImGui::SliderFloat("##slider", &var.tempValue, var.min, var.max, "%.2f");
+                    break;
+                case InputType::DRAG:
+                    changed = ImGui::DragFloat("##drag", &var.tempValue, var.step, var.min, var.max, "%.2f");
+                    break;
+                case InputType::INPUT_BOX:
+                    changed = ImGui::InputFloat("##input", &var.tempValue, var.step, var.step * 10.0f, "%.2f");
+                    if (changed) {
+                        var.tempValue = std::max(var.min, std::min(var.tempValue, var.max));
+                    }
+                    break;
             }
+
+            // 范围信息
+            ImGui::SameLine();
+            ImGui::TextDisabled("[%.1f-%.1f]", var.min, var.max);
 
             ImGui::PopID();
-            ImGui::Spacing();
         }
 
         ImGui::Spacing();
@@ -200,21 +238,34 @@ void VariableEditor::renderImGui() {
         ImGui::Spacing();
 
         // 应用按钮
-        ImGui::SetCursorPosX((ImGui::GetWindowWidth() - 120) * 0.5f);
-        if (ImGui::Button("应用修改", ImVec2(120, 40))) {
+        float buttonWidth = 120;
+        float buttonHeight = 30;
+        ImGui::SetCursorPosX((windowWidth - buttonWidth) * 0.5f);
+
+        ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.00f, 0.45f, 0.90f, 1.00f));
+        ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.00f, 0.50f, 0.95f, 1.00f));
+        ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0.00f, 0.40f, 0.85f, 1.00f));
+        ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1.00f, 1.00f, 1.00f, 1.00f));
+        ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 6.0f);
+
+        if (ImGui::Button("应用修改", ImVec2(buttonWidth, buttonHeight))) {
             applyChanges();
             changesApplied_ = true;
         }
+
+        ImGui::PopStyleVar();
+        ImGui::PopStyleColor(4);
 
         // 显示应用成功消息
         if (changesApplied_) {
             static float messageTimer = 0.0f;
             messageTimer += ImGui::GetIO().DeltaTime;
 
-            if (messageTimer < 2.0f) {
+            if (messageTimer < 1.5f) {
                 ImGui::Spacing();
-                ImGui::SetCursorPosX((ImGui::GetWindowWidth() - ImGui::CalcTextSize("✓ 修改已应用").x) * 0.5f);
-                ImGui::TextColored(ImVec4(0.0f, 1.0f, 0.0f, 1.0f), "✓ 修改已应用");
+                float msgWidth = ImGui::CalcTextSize("✓ 已应用").x;
+                ImGui::SetCursorPosX((windowWidth - msgWidth) * 0.5f);
+                ImGui::TextColored(ImVec4(0.00f, 0.60f, 0.00f, 1.00f), "✓ 已应用");
             } else {
                 changesApplied_ = false;
                 messageTimer = 0.0f;
@@ -223,6 +274,7 @@ void VariableEditor::renderImGui() {
     }
     ImGui::End();
 }
+
 
 void VariableEditor::applyChanges() {
     for (auto& var : variables_) {
