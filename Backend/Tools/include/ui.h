@@ -2,14 +2,14 @@
 
 #include <string>
 #include <vector>
-#include <map>
-#include <windows.h>
+#include <functional>
 
 class VariableEditor {
 public:
     enum class InputType {
         SLIDER,
-        TEXT_INPUT
+        DRAG,
+        INPUT_BOX
     };
 
     VariableEditor();
@@ -20,7 +20,10 @@ public:
                     float min = 0.0f, float max = 100.0f, float step = 1.0f,
                     InputType type = InputType::SLIDER);
 
-    // 显示编辑器窗口 (阻塞方式)
+    // 设置主题颜色 (0=深色, 1=浅色, 2=经典)
+    void setTheme(int themeId);
+
+    // 显示编辑器窗口
     void show();
 
 private:
@@ -32,19 +35,15 @@ private:
         float max;
         float step;
         InputType type;
-        HWND control;
-        HWND label;
     };
 
-    static LRESULT CALLBACK windowProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam);
-    void createWindow();
-    void createControls();
-    void updateControlValue(int index);
-    void readControlValue(int index);
+    void setupImGui();
+    void renderImGui();
     void applyChanges();
+    void cleanupImGui();
 
-    static VariableEditor* instance_;
-    HWND hwnd_;
     std::vector<Variable> variables_;
-    HFONT font_;
+    bool showWindow_;
+    bool changesApplied_;
+    int themeId_;
 };

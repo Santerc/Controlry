@@ -40,6 +40,18 @@ else()
     set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -g")
 endif()
 
+# ImGui 源文件
+set(IMGUI_DIR ${CMAKE_SOURCE_DIR}/third/imgui)
+set(IMGUI_SOURCES
+        ${IMGUI_DIR}/imgui.cpp
+        ${IMGUI_DIR}/imgui_demo.cpp
+        ${IMGUI_DIR}/imgui_draw.cpp
+        ${IMGUI_DIR}/imgui_tables.cpp
+        ${IMGUI_DIR}/imgui_widgets.cpp
+        ${IMGUI_DIR}/backends/imgui_impl_win32.cpp
+        ${IMGUI_DIR}/backends/imgui_impl_dx11.cpp
+)
+
 # 设置输出目录
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
@@ -50,14 +62,31 @@ file(GLOB_RECURSE SOURCES "src/*.cpp" "example/*.cpp" "User/src/*.cpp" "Tools/sr
 file(GLOB_RECURSE HEADERS "include/*.h" "include/*.hpp" "User/include/*.h" "User/include/*.hpp" "Tools/include/*.h")
 
 # 创建可执行文件
-add_executable(${PROJECT_NAME} ${SOURCES} ${HEADERS} User/src/PidController.cpp)
+add_executable(${PROJECT_NAME}
+        ${SOURCES}
+        ${HEADERS}
+        User/src/PidController.cpp
+        ${IMGUI_SOURCES}
+)
 
 # 添加头文件目录
-target_include_directories(${PROJECT_NAME} PRIVATE include User Tools)
+target_include_directories(${PROJECT_NAME} PRIVATE
+        include
+        User
+        Tools
+        ${IMGUI_DIR}
+        ${IMGUI_DIR}/backends)
 
 # 添加 WinSock2 库
 target_link_libraries(${PROJECT_NAME} PRIVATE ws2_32)
 
 if(WIN32)
-    target_link_libraries(${PROJECT_NAME} PRIVATE comctl32 user32 gdi32)
+    target_link_libraries(${PROJECT_NAME} PRIVATE
+            d3d11
+            dxgi
+            comctl32
+            ws2_32
+            dwmapi
+            d3dcompiler
+    )
 endif()
