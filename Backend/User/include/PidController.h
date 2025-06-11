@@ -15,7 +15,6 @@ public:
     // 重置控制器
     void reset();
 
-private:
     float kp_;
     float ki_;
     float kd_;
@@ -24,6 +23,8 @@ private:
     float integral_;
     float integral_max_;
     float lastError_;
+
+private:
 };
 
 #endif // PID_CONTROLLER_H

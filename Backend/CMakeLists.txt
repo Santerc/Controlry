@@ -66,6 +66,7 @@ add_executable(${PROJECT_NAME}
         ${SOURCES}
         ${HEADERS}
         User/src/PidController.cpp
+        User/src/debug.cpp
         ${IMGUI_SOURCES}
 )
 

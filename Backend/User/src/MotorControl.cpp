@@ -9,7 +9,9 @@
 std::atomic<bool> g_running{false};
 std::atomic<float> g_targetTorque{1.5f};
 
-PIDController SpeedController(0.6f, 0.02f, 0.0f, -10.0f, 10.0f, 1.0f);
+float omega_watch = 0.0f;  // 用于监控角度反馈
+
+PIDController SpeedController(0.4f, 0.02f, 0.0f, -10.0f, 10.0f, 1.0f);
 
 void torqueUpdateLoop() {
     using clock = std::chrono::high_resolution_clock;
@@ -23,6 +25,7 @@ void torqueUpdateLoop() {
         // 更新电机转矩
         auto& motorManager = MotorManager::getInstance();
         if (Motor* motor = motorManager.getMotor(0)) {
+            omega_watch = motor->getCurrentOmega();
             float torque = SpeedController.compute(
                 5.F,
                 motor->getCurrentOmega(),

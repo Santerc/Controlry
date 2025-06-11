@@ -1,6 +1,7 @@
 #include <iostream>
 #include "motor_manager.h"
 #include "include/MotorControl.h"
+#include "include/debug.h"
 
 int main() {
     MotorManager& motorManager = MotorManager::getInstance();
@@ -29,9 +30,11 @@ int main() {
     std::thread controlThread;
     startTorqueControl(controlThread);
     std::cout << "All motors connected. Press Enter to exit..." << std::endl;
+    startDebugThread();
 
     std::cin.get();
 
+    stopDebugThread();
     stopTorqueControl(controlThread);
     motorManager.disconnectAll();
 
