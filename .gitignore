@@ -45,6 +45,7 @@ cmake-build-debug/
 
 # IDE相关
 .vs/
+.vscode/
 .idea/
 *.swp
 *.swo
@@ -52,3 +53,7 @@ cmake-build-debug/
 *.user
 *.userprefs
 *.sln.docstates
+.cache/
+
+# 编译后文件相关
+Output/
