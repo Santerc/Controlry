@@ -2,7 +2,7 @@
 cmake_minimum_required(VERSION 3.11)
 
 # 项目名称和版本
-project(motor_control VERSION 1.0.0 LANGUAGES CXX)
+project(motor_control VERSION 0.01 LANGUAGES CXX)
 
 # 设置C++标准
 set(CMAKE_CXX_STANDARD 20)
