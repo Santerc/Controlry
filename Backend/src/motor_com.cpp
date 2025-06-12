@@ -49,7 +49,7 @@ bool MotorCommunication::connect(const std::string& ipAddress, int port) {
     serverAddr.sin_port = htons(port);
     serverAddr.sin_addr.s_addr = inet_addr(ipAddress.c_str());
 
-    if (::connect(sock, (sockaddr*)&serverAddr, sizeof(serverAddr)) < 0) {
+    if (::connect(sock, reinterpret_cast<sockaddr *>(&serverAddr), sizeof(serverAddr)) < 0) {
         std::cerr << "Connection failed." << std::endl;
         closesocket(sock);
         sock = INVALID_SOCKET;

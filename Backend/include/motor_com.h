@@ -12,13 +12,13 @@ class Motor;
 class MotorCommunication {
 public:
     // Constructor and destructor
-    MotorCommunication(Motor* motor);
+    explicit MotorCommunication(Motor* motor);
     ~MotorCommunication();
 
     // Connection methods
     bool connect(const std::string& ipAddress, int port);
     void disconnect();
-    bool isConnected() const;
+    [[nodiscard]] bool isConnected() const;
 
 private:
     // Socket and connection
@@ -41,7 +41,7 @@ private:
     void receiveThreadFunc();
     
     // Winsock initialization
-    bool initializeWinsock();
+    static bool initializeWinsock();
 };
 
 #endif // MOTOR_COM_H
