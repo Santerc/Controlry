@@ -17,6 +17,8 @@ void Debug_init() {
 
 
     // ========== 添加可编辑变量 ==========
+    debugInterface.addEditableVariable("speed_ref", &omega_ref, -500.0f, 500.0f, 0.01f,
+                                       DebugInterface::InputType::INPUT_BOX);
     debugInterface.addEditableVariable("kp", &SpeedController.kp_, -500.0f, 500.0f, 0.01f,
                                        DebugInterface::InputType::INPUT_BOX);
     debugInterface.addEditableVariable("ki", &SpeedController.ki_, -500.0f, 500.0f, 0.01f,
@@ -25,13 +27,13 @@ void Debug_init() {
                                        DebugInterface::InputType::INPUT_BOX);
 
     // ========== 添加波形监控变量 ==========
-    debugInterface.addWatchVariable("角度反馈", &omega_watch,
+    debugInterface.addWatchVariable("角速度反馈", &omega_watch,
                                     DebugInterface::ViewMode::WAVEFORM, "rad/s",
                                     IM_COL32(0, 120, 250, 255));    // 蓝色
 
     // ========== 添加数值监控变量 ==========
-    debugInterface.addWatchVariable("角度反馈", &omega_watch,
-                                    DebugInterface::ViewMode::NUMERIC, "提取方法…");
+    debugInterface.addWatchVariable("角速度反馈", &omega_watch,
+                                    DebugInterface::ViewMode::NUMERIC, "rad/s");
 
     // ========== 配置波形显示 ==========
     DebugInterface::WaveformConfig config;
