@@ -101,15 +101,15 @@ void MotorCommunication::sendThreadFunc() {
 
         {
             std::lock_guard<std::mutex> lock(consoleMutex);
-            std::cout << "Motor ID " << motor->getMotorId() << " - Sending torque bytes: ";
-            for(int i = 0; i < 4; i++) {
-                std::cout << static_cast<int>(static_cast<unsigned char>(torqueBuffer[i])) << " ";
-            }
+            // std::cout << "Motor ID " << motor->getMotorId() << " - Sending torque bytes: ";
+            // for(int i = 0; i < 4; i++) {
+            //     std::cout << static_cast<int>(static_cast<unsigned char>(torqueBuffer[i])) << " ";
+            // }
 
             // Create a temporary buffer to reconstruct
             float reconstructed;
             std::memcpy(&reconstructed, torqueBuffer, 4);
-            std::cout << "-> Reconstructed value: " << reconstructed << " Nm" << std::endl;
+            // std::cout << "-> Reconstructed value: " << reconstructed << " Nm" << std::endl;
         }
 
         int sent = send(sock, torqueBuffer, 4, 0);
