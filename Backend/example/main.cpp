@@ -6,7 +6,7 @@
 int main() {
     MotorManager& motorManager = MotorManager::getInstance();
 
-    // 创建多个电机
+    // 也可以创建多个电机
     const int numMotors = 1;
     const int basePort = 6000;
 

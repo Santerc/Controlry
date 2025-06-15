@@ -26,17 +26,14 @@ public:
     void disconnectAll();
 
 private:
-    // 单例模式的私有构造函数
     MotorManager() = default;
     ~MotorManager();
 
-    // 删除复制和移动操作
     MotorManager(const MotorManager&) = delete;
     MotorManager& operator=(const MotorManager&) = delete;
     MotorManager(MotorManager&&) = delete;
     MotorManager& operator=(MotorManager&&) = delete;
 
-    // 电机存储
     std::map<int, std::unique_ptr<Motor>> motors;
 };
 
