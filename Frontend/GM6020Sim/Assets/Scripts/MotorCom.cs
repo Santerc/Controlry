@@ -27,7 +27,7 @@ public class MotorComServer : MonoBehaviour
     public StopBits stopBits = StopBits.One;
     
     [Header("General Settings")]
-    public float reconnectDelay = 1f; // 重连延迟时间(秒)
+    public float reconnectDelay = 2f; // 重连延迟时间(秒)
     
     // TCP相关
     private TcpListener listener;
@@ -81,7 +81,7 @@ public class MotorComServer : MonoBehaviour
         catch (Exception e)
         {
             Debug.LogError($"Failed to start TCP server: {e.Message}");
-            Invoke("StartTcpServer", reconnectDelay);
+            // Invoke("StartTcpServer", reconnectDelay);
         }
     }
 

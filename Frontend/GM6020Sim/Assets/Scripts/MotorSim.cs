@@ -7,8 +7,8 @@ public class MotorSim : MonoBehaviour
     public Transform rotor;   // 拖入转子模型
 
     [Header("Control Input")]
-    [SerializeField]
-    private bool useKeyboardControl = false;  // 添加开关以控制输入来源
+    // [SerializeField]
+    // private bool useKeyboardControl = false;  // 添加开关以控制输入来源
     [SerializeField]
     private float torqueInput = 0f;
     public float TorqueInput
