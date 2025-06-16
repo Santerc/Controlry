@@ -18,7 +18,7 @@ void torqueUpdateLoop() {
     using clock = std::chrono::high_resolution_clock;
     using duration = std::chrono::duration<double, std::milli>;
 
-    const duration target_duration(1.0);  // 1ms周期
+    const duration target_duration(10.0);  // 1ms周期
     auto next_time = clock::now();
     double time = 0.0;
 
@@ -30,10 +30,10 @@ void torqueUpdateLoop() {
             float torque = SpeedController.compute(
                 omega_ref,
                 motor->getCurrentOmega(),
-                0.001f  // dt = 1ms
+                0.01f  // dt = 10ms
             );
             motor->setTorque(torque);
-            time += 0.001;
+            time += 0.01;
         }
 
         next_time += std::chrono::duration_cast<clock::duration>(target_duration);

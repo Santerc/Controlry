@@ -5,6 +5,7 @@ using System.Threading;
 using System;
 using System.Linq;
 using System.IO.Ports;
+using System.Collections.Generic;
 
 public enum ComMethod{
     Tcp,
@@ -26,21 +27,32 @@ public class MotorComServer : MonoBehaviour
     public int dataBits = 8;
     public StopBits stopBits = StopBits.One;
     
+    [Header("Motor Settings")]
+    public byte motorId = 1; // 默认电机ID
+    
     [Header("General Settings")]
-    public float reconnectDelay = 2f; // 重连延迟时间(秒)
+    public float reconnectDelay = 2f;
+    
+    // 通信常量
+    private const byte FEEDBACK_HEADER = 0xA0;
+    private const byte COMMAND_HEADER = 0xA1;
+    private const int FEEDBACK_PACKET_SIZE = 11; // A0 + ID + Angle(4) + Speed(4) + Checksum
+    private const int COMMAND_PACKET_SIZE = 7;   // A1 + ID + Torque(4) + Checksum
     
     // TCP相关
     private TcpListener listener;
     private TcpClient client;
     private NetworkStream stream;
     
-    // RS485相关
+    // UART相关（本来想做485的结果没钱买了QAQ）
     private SerialPort serialPort;
     
     // 通用
     private Thread commThread;
     private volatile bool running = false;
-    private volatile bool shouldRun = true; // 控制服务运行状态
+    private volatile bool shouldRun = true;
+    private byte[] receiveBuffer = new byte[1024];
+    private int bufferPosition = 0;
 
     public MotorSim motorSim;
     
@@ -208,61 +220,31 @@ public class MotorComServer : MonoBehaviour
 
     void TcpCommLoop()
     {
-        byte[] torqueBuf = new byte[4];
-        byte[] feedbackBuf = new byte[8];
-
         Debug.Log("TCP Communication started");
 
         while (running && shouldRun)
         {
             try
             {
-                // 检查连接是否仍然有效
                 if (client == null || !client.Connected || stream == null)
                 {
                     Debug.LogWarning("TCP client connection lost");
                     break;
                 }
 
-                // 读取力矩数据
-                int readCount = 0;
-                while (readCount < 4 && running)
+                // 读取数据
+                int bytesRead = stream.Read(receiveBuffer, bufferPosition, receiveBuffer.Length - bufferPosition);
+                if (bytesRead == 0)
                 {
-                    if (!client.Connected)
-                    {
-                        throw new Exception("TCP Client disconnected during read");
-                    }
-
-                    int r = stream.Read(torqueBuf, readCount, 4 - readCount);
-                    if (r == 0)
-                    {
-                        throw new Exception("TCP Client disconnected - no data received");
-                    }
-                    readCount += r;
+                    throw new Exception("TCP Client disconnected - no data received");
                 }
-
-                if (readCount == 4)
-                {
-                    ProcessTorqueData(torqueBuf);
-
-                    try
-                    {
-                        // 发送反馈数据
-                        if (client != null && client.Connected && stream != null)
-                        {
-                            Buffer.BlockCopy(BitConverter.GetBytes(motorSim.Angle * Mathf.Rad2Deg), 0, feedbackBuf, 0, 4);
-                            Buffer.BlockCopy(BitConverter.GetBytes(motorSim.Speed), 0, feedbackBuf, 4, 4);
-                            stream.Write(feedbackBuf, 0, 8);
-                            stream.Flush();
-                        }
-                    }
-                    catch (Exception ex)
-                    {
-                        Debug.LogWarning($"TCP send error: {ex.Message}");
-                        break; // 发送失败，退出循环
-                    }
-                }
-
+                
+                bufferPosition += bytesRead;
+                ProcessReceivedData();
+                
+                // 发送反馈数据
+                SendFeedbackPacket();
+                
                 Thread.Sleep(10);
             }
             catch (Exception e)
@@ -273,15 +255,11 @@ public class MotorComServer : MonoBehaviour
         }
 
         Debug.Log("TCP Communication ended");
-        
-        // 通信结束，清理连接并准备接受新连接
         CleanupTcpConnection();
         
-        // 如果服务器还在运行，准备接受新连接
         if (shouldRun && listener != null)
         {
-            Debug.Log("Preparing to accept new connections...");
-            Invoke("BeginAcceptClient", 1f); // 1秒后重新开始监听
+            Invoke("BeginAcceptClient", 1f);
         }
     }
 
@@ -421,68 +399,37 @@ public class MotorComServer : MonoBehaviour
 
     void RS485CommLoop()
     {
-        byte[] torqueBuf = new byte[4];
-        byte[] feedbackBuf = new byte[8];
-
         Debug.Log("RS485 Communication started");
 
         while (running && shouldRun)
         {
             try
             {
-                // 检查串口是否仍然打开
                 if (serialPort == null || !serialPort.IsOpen)
                 {
                     Debug.LogWarning("RS485 serial port closed");
                     break;
                 }
 
-                // RS485读取力矩数据
-                int readCount = 0;
-                while (readCount < 4 && running && serialPort.IsOpen)
+                // 读取数据
+                int bytesToRead = serialPort.BytesToRead;
+                if (bytesToRead > 0)
                 {
-                    try
-                    {
-                        int bytesToRead = Math.Min(serialPort.BytesToRead, 4 - readCount);
-                        if (bytesToRead > 0)
-                        {
-                            int r = serialPort.Read(torqueBuf, readCount, bytesToRead);
-                            readCount += r;
-                        }
-                        else
-                        {
-                            Thread.Sleep(1); // 短暂等待避免过度占用CPU
-                        }
-                    }
-                    catch (TimeoutException)
-                    {
-                        // 读取超时，继续尝试
-                        continue;
-                    }
+                    int bytesRead = serialPort.Read(receiveBuffer, bufferPosition, 
+                        Math.Min(bytesToRead, receiveBuffer.Length - bufferPosition));
+                    bufferPosition += bytesRead;
+                    ProcessReceivedData();
                 }
 
-                if (readCount == 4)
-                {
-                    ProcessTorqueData(torqueBuf);
-
-                    try
-                    {
-                        // 发送反馈数据
-                        if (serialPort != null && serialPort.IsOpen)
-                        {
-                            Buffer.BlockCopy(BitConverter.GetBytes(motorSim.Angle * Mathf.Rad2Deg), 0, feedbackBuf, 0, 4);
-                            Buffer.BlockCopy(BitConverter.GetBytes(motorSim.Speed), 0, feedbackBuf, 4, 4);
-                            serialPort.Write(feedbackBuf, 0, 8);
-                        }
-                    }
-                    catch (Exception ex)
-                    {
-                        Debug.LogWarning($"RS485 write error: {ex.Message}");
-                        break; // 写入失败，退出循环
-                    }
-                }
-
+                // 发送反馈数据
+                SendFeedbackPacket();
+                
                 Thread.Sleep(10);
+            }
+            catch (TimeoutException)
+            {
+                // 读取超时是正常的，继续循环
+                continue;
             }
             catch (Exception e)
             {
@@ -492,14 +439,10 @@ public class MotorComServer : MonoBehaviour
         }
 
         Debug.Log("RS485 Communication ended");
-        
-        // 通信结束，清理连接
         CleanupRS485Connection();
         
-        // 如果服务器还在运行，尝试重新连接
         if (shouldRun)
         {
-            Debug.Log($"Will attempt RS485 reconnection in {reconnectDelay} seconds...");
             Invoke("StartRS485", reconnectDelay);
         }
     }
@@ -524,7 +467,129 @@ public class MotorComServer : MonoBehaviour
         }
     }
     #endregion
+    
+    #region Packet Processing
+    void ProcessReceivedData()
+    {
+        while (bufferPosition >= COMMAND_PACKET_SIZE)
+        {
+            // 查找命令包头
+            int packetStart = -1;
+            for (int i = 0; i <= bufferPosition - COMMAND_PACKET_SIZE; i++)
+            {
+                if (receiveBuffer[i] == COMMAND_HEADER)
+                {
+                    packetStart = i;
+                    break;
+                }
+            }
 
+            if (packetStart == -1)
+            {
+                // 没有找到完整包，清理缓冲区
+                if (bufferPosition > COMMAND_PACKET_SIZE)
+                {
+                    Array.Copy(receiveBuffer, bufferPosition - COMMAND_PACKET_SIZE + 1, 
+                             receiveBuffer, 0, COMMAND_PACKET_SIZE - 1);
+                    bufferPosition = COMMAND_PACKET_SIZE - 1;
+                }
+                return;
+            }
+
+            // 检查是否有足够数据
+            if (bufferPosition - packetStart < COMMAND_PACKET_SIZE)
+            {
+                // 数据不足，等待更多数据
+                if (packetStart > 0)
+                {
+                    Array.Copy(receiveBuffer, packetStart, receiveBuffer, 0, bufferPosition - packetStart);
+                    bufferPosition -= packetStart;
+                }
+                return;
+            }
+
+            // 校验和检查
+            byte checksum = 0;
+            for (int i = 0; i < COMMAND_PACKET_SIZE - 1; i++)
+            {
+                checksum ^= receiveBuffer[packetStart + i];
+            }
+
+            if (checksum != receiveBuffer[packetStart + COMMAND_PACKET_SIZE - 1])
+            {
+                Debug.LogWarning($"Checksum error in command packet at position {packetStart}");
+                bufferPosition--;
+                Array.Copy(receiveBuffer, packetStart + 1, receiveBuffer, packetStart, bufferPosition - packetStart);
+                continue;
+            }
+
+            // 提取电机ID和扭矩值
+            byte receivedId = receiveBuffer[packetStart + 1];
+            if (receivedId == motorId) // 只处理本电机ID的数据
+            {
+                float torque = BitConverter.ToSingle(receiveBuffer, packetStart + 2);
+                motorSim.motors[motorId].torqueInput = torque;
+                
+                Debug.Log($"Received torque command for motor {receivedId}: {torque:F3} Nm");
+            }
+
+            // 移除已处理的数据包
+            int remainingBytes = bufferPosition - (packetStart + COMMAND_PACKET_SIZE);
+            if (remainingBytes > 0)
+            {
+                Array.Copy(receiveBuffer, packetStart + COMMAND_PACKET_SIZE, 
+                         receiveBuffer, 0, remainingBytes);
+            }
+            bufferPosition = remainingBytes;
+        }
+    }
+
+    void SendFeedbackPacket()
+    {
+        if ((communicationMethod == ComMethod.Tcp && (client == null || !client.Connected)) ||
+            (communicationMethod == ComMethod.Uart && (serialPort == null || !serialPort.IsOpen)))
+        {
+            return;
+        }
+
+        try
+        {
+            byte[] packet = new byte[FEEDBACK_PACKET_SIZE];
+            
+            // 包头
+            packet[0] = FEEDBACK_HEADER;
+            // 电机ID
+            packet[1] = motorId;
+            // 角度数据（转换为度）
+            Buffer.BlockCopy(BitConverter.GetBytes(motorSim.motors[motorId].angle * Mathf.Rad2Deg), 0, packet, 2, 4);
+            // 速度数据
+            Buffer.BlockCopy(BitConverter.GetBytes(motorSim.motors[motorId].angularVelocity), 0, packet, 6, 4);
+            
+            // 计算校验和
+            byte checksum = 0;
+            for (int i = 0; i < FEEDBACK_PACKET_SIZE - 1; i++)
+            {
+                checksum ^= packet[i];
+            }
+            packet[FEEDBACK_PACKET_SIZE - 1] = checksum;
+
+            // 发送数据
+            if (communicationMethod == ComMethod.Tcp)
+            {
+                stream.Write(packet, 0, packet.Length);
+            }
+            else
+            {
+                serialPort.Write(packet, 0, packet.Length);
+            }
+        }
+        catch (Exception ex)
+        {
+            Debug.LogWarning($"Error sending feedback packet: {ex.Message}");
+        }
+    }
+    #endregion
+    
     #region Common Methods
     void ProcessTorqueData(byte[] torqueBuf)
     {
@@ -539,8 +604,8 @@ public class MotorComServer : MonoBehaviour
         Debug.Log($"转换后的力矩值: {torqueValue:F3} Nm");
 
         // 更新MotorSim的输入力矩
-        motorSim.TorqueInput = torqueValue;
-        Debug.Log($"Motor Torque Input: {motorSim.TorqueInput}");
+        motorSim.motors[motorId].torqueInput = torqueValue;
+        Debug.Log($"Motor Torque Input: {motorSim.motors[motorId].torqueInput}");
     }
 
     void CleanupAll()

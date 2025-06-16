@@ -1221,12 +1221,19 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0789503eef2df734c94074c8660d96d9, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  rotor: {fileID: 1073074337}
-  torqueInput: 0
-  inertia: 0.01
-  damping: 0.002
-  staticFriction: 0.05
-  loadTorque: 0.02
+  motors:
+  - rotor: {fileID: 1073074337}
+    torqueInput: 0
+    inertia: 0.01
+    damping: 0.002
+    staticFriction: 0.05
+    loadTorque: 0.02
+    angularVelocity: 0
+    angle: 0
+    motorId: 0
+  useKeyboardControl: 0
+  keyboardControlledMotorIndex: 0
+  keyboardControlTorque: 0.1
 --- !u!4 &858957650
 Transform:
   m_ObjectHideFlags: 0
@@ -1650,7 +1657,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1073074337}
   m_Layer: 0
-  m_Name: RotorPivot
+  m_Name: RotorPivot_0
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -1664,8 +1671,8 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1073074336}
   serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0.14107, y: 0, z: 0.23249}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 0.14107001, y: 0, z: 0.23249}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -2002,7 +2009,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1268948662}
   serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
@@ -2222,6 +2229,7 @@ MonoBehaviour:
   parity: 0
   dataBits: 8
   stopBits: 1
+  motorId: 0
   reconnectDelay: 1
   motorSim: {fileID: 858957649}
 --- !u!4 &1488202289
@@ -4604,12 +4612,12 @@ SceneRoots:
   - {fileID: 330585546}
   - {fileID: 410087041}
   - {fileID: 832575519}
-  - {fileID: 1268948663}
   - {fileID: 148879315}
   - {fileID: 1451255296}
   - {fileID: 858957650}
-  - {fileID: 1073074337}
   - {fileID: 1332673479}
   - {fileID: 568428125}
   - {fileID: 384443128}
   - {fileID: 1488202289}
+  - {fileID: 1268948663}
+  - {fileID: 1073074337}

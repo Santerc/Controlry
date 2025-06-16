@@ -6,6 +6,7 @@
 #include <thread>
 #include <mutex>
 #include <atomic>
+#include <vector>
 
 class Motor;
 
@@ -17,6 +18,7 @@ public:
     bool connect(const std::string& ipAddress, int port);
     void disconnect();
     [[nodiscard]] bool isConnected() const;
+    void processReceivedData();
 
 private:
     SOCKET sock;
@@ -30,6 +32,9 @@ private:
     std::thread receiverThread;
 
     std::mutex consoleMutex;
+
+    std::vector<uint8_t> receiveBuffer;
+    size_t bufferPosition;
 
     void sendThreadFunc();
     void receiveThreadFunc();

@@ -117,14 +117,14 @@ public class MotorUI : MonoBehaviour
 
         // 更新电机状态显示
         if (angleText != null)
-            angleText.text = $"Angle: {motorSim.Angle * Mathf.Rad2Deg:F2}°";
+            angleText.text = $"Angle: {motorSim.motors[0].angle * Mathf.Rad2Deg:F2}°";
         
         if (speedText != null)
-            speedText.text = $"Omega: {motorSim.Speed:F2} rad/s";
+            speedText.text = $"Omega: {motorSim.motors[0].angularVelocity:F2} rad/s";
         
         if (torqueText != null)
         {
-            torqueText.text = $"Torque: {motorSim.GetToque():F3} Nm";
+            torqueText.text = $"Torque: {motorSim.motors[0].torqueInput:F3} Nm";
             
             // 让转矩数字周期性渐变颜色
             float t = (Mathf.Sin(Time.time * 3f) + 1f) / 2f;
