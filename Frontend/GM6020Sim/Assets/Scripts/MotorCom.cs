@@ -8,7 +8,7 @@ using System.IO.Ports;
 
 public enum ComMethod{
     Tcp,
-    Rs485,
+    Uart,
 }
 
 public class MotorComServer : MonoBehaviour
@@ -43,6 +43,11 @@ public class MotorComServer : MonoBehaviour
     private volatile bool shouldRun = true; // 控制服务运行状态
 
     public MotorSim motorSim;
+    
+    public bool IsShouldRun()
+    {
+        return shouldRun;
+    }
 
     void Start()
     {
@@ -62,7 +67,7 @@ public class MotorComServer : MonoBehaviour
             case ComMethod.Tcp:
                 StartTcpServer();
                 break;
-            case ComMethod.Rs485:
+            case ComMethod.Uart:
                 StartRS485();
                 break;
         }
@@ -375,6 +380,7 @@ public class MotorComServer : MonoBehaviour
     #region RS485 Communication
     void StartRS485()
     {
+        StopTcpServer();
         try
         {
             // 先清理可能存在的串口连接
@@ -571,7 +577,7 @@ public class MotorComServer : MonoBehaviour
                 CleanupTcpConnection();
                 StopTcpServer();
                 break;
-            case ComMethod.Rs485:
+            case ComMethod.Uart:
                 CleanupRS485Connection();
                 break;
         }
@@ -633,6 +639,89 @@ public class MotorComServer : MonoBehaviour
     {
         CleanupAll();
     }
+    
+    #region Public Properties for UI
+    /// <summary>
+    /// 获取服务器是否应该运行的状态
+    /// </summary>
+    public bool ShouldRun => shouldRun;
+    
+    /// <summary>
+    /// 获取当前是否正在运行通信
+    /// </summary>
+    public bool IsRunning => running;
+    #endregion
+
+    #region Public Methods for UI
+    /// <summary>
+    /// 检查TCP客户端是否已连接
+    /// </summary>
+    /// <returns>如果TCP客户端已连接返回true</returns>
+    public bool IsClientConnected()
+    {
+        return client != null && client.Connected && running;
+    }
+
+    /// <summary>
+    /// 检查RS485串口是否已打开
+    /// </summary>
+    /// <returns>如果串口已打开返回true</returns>
+    public bool IsSerialPortOpen()
+    {
+        return serialPort != null && serialPort.IsOpen && running;
+    }
+
+    /// <summary>
+    /// 获取当前连接状态
+    /// </summary>
+    /// <returns>如果当前通信方式已连接返回true</returns>
+    public bool IsConnected()
+    {
+        switch (communicationMethod)
+        {
+            case ComMethod.Tcp:
+                return IsClientConnected();
+            case ComMethod.Uart:
+                return IsSerialPortOpen();
+            default:
+                return false;
+        }
+    }
+
+    /// <summary>
+    /// 获取连接信息字符串
+    /// </summary>
+    /// <returns>当前连接的详细信息</returns>
+    public string GetConnectionInfo()
+    {
+        switch (communicationMethod)
+        {
+            case ComMethod.Tcp:
+                if (IsClientConnected())
+                {
+                    try
+                    {
+                        return $"TCP Client: {client.Client.RemoteEndPoint}";
+                    }
+                    catch
+                    {
+                        return "TCP Client: Connected";
+                    }
+                }
+                return $"TCP Server: Listening on port {listenPort}";
+                
+            case ComMethod.Uart:
+                if (IsSerialPortOpen())
+                {
+                    return $"RS485: {serialPortName} @ {baudRate} baud";
+                }
+                return $"RS485: Disconnected ({serialPortName})";
+                
+            default:
+                return "Unknown method";
+        }
+    }
+    #endregion
 
     // 在Inspector中切换通信方式时重启通信
     void OnValidate()
