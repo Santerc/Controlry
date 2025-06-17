@@ -57,3 +57,5 @@ cmake-build-debug/
 
 # 编译后文件相关
 Output/
+Output1.02/
+*.zip

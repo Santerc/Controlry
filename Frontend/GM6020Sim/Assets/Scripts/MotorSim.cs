@@ -50,29 +50,31 @@ public class Motor
         float frictionTorque = 0f;
         
         // 静摩擦处理
-        if (Mathf.Abs(angularVelocity) < 0.1f && Mathf.Abs(torqueInput) < staticFriction)
+        if (Mathf.Abs(angularVelocity) < 0.01f && Mathf.Abs(torqueInput) <= staticFriction)
         {
+            // 静止状态下，如果输入力矩小于静摩擦，电机保持静止
             frictionTorque = -torqueInput;
+            angularVelocity = 0f;
         }
         else
         {
+            // 运动状态下的摩擦力矩
             frictionTorque = -Mathf.Sign(angularVelocity) * staticFriction;
         }
-        // Debug.Log(angularVelocity);
-        // 总力矩计算
+    
+        // 总力矩计算：输入力矩 - 负载力矩 - 阻尼力矩 + 摩擦力矩
         float totalTorque = torqueInput 
-                         - loadTorque * Mathf.Sign(angularVelocity)
+                         - (angularVelocity != 0f ? loadTorque * Mathf.Sign(angularVelocity) : 0f)
                          - damping * angularVelocity 
                          + frictionTorque;
         
-        // Debug.Log(totalTorque);
-        
-        // // 物理模拟
+        // 物理模拟
         float angularAccel = totalTorque / inertia;
-        // Debug.Log(inertia);
-        angularVelocity = 0;
+        float previousVelocity = angularVelocity;
         angularVelocity += angularAccel * deltaTime;
-        angle += angularVelocity * deltaTime;
+        
+        // 更新角度：使用梯形积分提高精度
+        angle += (previousVelocity + angularVelocity) * 0.5f * deltaTime;
         
         // 更新转子模型
         if (rotor != null)

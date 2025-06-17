@@ -12,13 +12,13 @@ std::atomic<float> g_targetTorque{1.5f};
 float omega_watch = 0.0f;  // 用于监控角度反馈
 float omega_ref = 0.0f;
 
-PIDController SpeedController(0.23f, 0.01f, 0.0f, -10.0f, 10.0f, 1.0f);
+PIDController SpeedController(0.23f, 0.01f, 0.0f, -100.0f, 100.0f, 10.0f);
 
 void torqueUpdateLoop() {
     using clock = std::chrono::high_resolution_clock;
     using duration = std::chrono::duration<double, std::milli>;
 
-    const duration target_duration(10.0);  // 1ms周期
+    const duration target_duration(10.0);  // 10ms周期
     auto next_time = clock::now();
     double time = 0.0;
 

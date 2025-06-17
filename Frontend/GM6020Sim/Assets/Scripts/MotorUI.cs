@@ -30,6 +30,13 @@ public class MotorUI : MonoBehaviour
     [Header("RS485 Settings")]
     public TMP_Dropdown comPortDropdown;
     
+    [Header("UI Update Settings")]
+    [SerializeField] private float motorDataInterval = 0.02f; // 电机数据更新间隔
+    [SerializeField] private float connectionStatusInterval = 0.02f; // 连接状态更新间隔
+    
+    private float nextMotorUpdateTime = 0f;
+    private float nextConnectionUpdateTime = 0f;
+    
     // UI颜色配置
     private Color baseColor = new Color(1f, 1f, 1f, 0.9f); // 白色略透明
     private Color highlightColor = new Color(1f, 0.55f, 0f, 1f); // 大疆橙色
@@ -106,9 +113,21 @@ public class MotorUI : MonoBehaviour
 
     void Update()
     {
-        UpdateMotorStatus();
-        UpdateConnectionStatus();
-        // OnToggleCommunicationMethod();
+        float currentTime = Time.time;
+        
+        // 更新电机数据
+        if (currentTime >= nextMotorUpdateTime)
+        {
+            UpdateMotorStatus();
+            nextMotorUpdateTime = currentTime + motorDataInterval;
+        }
+        
+        // 更新连接状态
+        if (currentTime >= nextConnectionUpdateTime)
+        {
+            UpdateConnectionStatus();
+            nextConnectionUpdateTime = currentTime + connectionStatusInterval;
+        }
     }
 
     void UpdateMotorStatus()
