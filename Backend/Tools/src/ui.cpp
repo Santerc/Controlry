@@ -447,9 +447,9 @@ void DebugInterface::renderEditorPanel() {
 
         if (messageTimer < 1.5f) {
             ImGui::Spacing();
-            float msgWidth = ImGui::CalcTextSize("✓ 已应用").x;
+            float msgWidth = ImGui::CalcTextSize("已应用").x;
             ImGui::SetCursorPosX((ImGui::GetContentRegionAvail().x - msgWidth) * 0.5f);
-            ImGui::TextColored(ImVec4(0.00f, 0.65f, 0.00f, 1.00f), "✓ 已应用");
+            ImGui::TextColored(ImVec4(0.00f, 0.65f, 0.00f, 1.00f), "已应用");
         } else {
             changesApplied_ = false;
             messageTimer = 0.0f;

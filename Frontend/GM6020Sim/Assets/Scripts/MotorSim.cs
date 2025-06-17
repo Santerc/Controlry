@@ -75,6 +75,7 @@ public class Motor
         
         // 更新角度：使用梯形积分提高精度
         angle += (previousVelocity + angularVelocity) * 0.5f * deltaTime;
+        angle %= (2 * Mathf.PI);
         
         // 更新转子模型
         if (rotor != null)
