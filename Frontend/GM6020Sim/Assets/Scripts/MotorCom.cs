@@ -20,7 +20,7 @@ public class MotorComServer : MonoBehaviour
     [Header("TCP Settings")]
     public int listenPort = 6000;
     
-    [Header("RS485 Settings")]
+    [Header("UART Settings")]
     public string serialPortName = "COM1";
     public int baudRate = 115200;
     public Parity parity = Parity.None;
