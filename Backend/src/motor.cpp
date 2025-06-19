@@ -4,7 +4,7 @@
 
 Motor::Motor(int motorId) : 
     motorId(motorId),
-    torqueToSend(1.5f),
+    torqueToSend(0.0f),
     currentAngle(0.0f),
     currentOmega(0.0f) {
     // Create the communication object
