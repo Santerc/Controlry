@@ -402,7 +402,7 @@ void DebugInterface::renderEditorPanel() {
             case InputType::INPUT_BOX: {
                 changed = ImGui::InputFloat("##input", &var.tempValue, var.step, var.step * 10.0f, "%.2f");
                 if (changed) {
-                    var.tempValue = std::max(var.min, std::min(var.tempValue, var.max));
+                    var.tempValue = std::max<float>(var.min, std::min<float>(var.tempValue, var.max));
                 }
                 break;
             }
@@ -517,8 +517,8 @@ void DebugInterface::renderWaveformArea() {
                     maxY = var.maxValue;
                     first = false;
                 } else {
-                    minY = std::min(minY, var.minValue);
-                    maxY = std::max(maxY, var.maxValue);
+                    minY = std::min<float>(minY, var.minValue);
+                    maxY = std::max<float>(maxY, var.maxValue);
                 }
             }
         }
@@ -563,7 +563,7 @@ void DebugInterface::renderWaveformArea() {
         // 鼠标滚轮缩放
         if (io.MouseWheel != 0.0f) {
             float zoomDelta = io.MouseWheel * 0.1f;
-            waveformConfig_.zoomFactor = std::max(0.1f, std::min(10.0f, waveformConfig_.zoomFactor - zoomDelta));
+            waveformConfig_.zoomFactor = std::max<float>(0.1f, std::min<float>(10.0f, waveformConfig_.zoomFactor - zoomDelta));
         }
 
         // 鼠标点击设置游标
@@ -728,8 +728,8 @@ void DebugInterface::updateData() {
             float currentValue = *var.valuePtr;
 
             // 更新最大最小值和最后的值
-            var.minValue = std::min(var.minValue, currentValue);
-            var.maxValue = std::max(var.maxValue, currentValue);
+            var.minValue = std::min<float>(var.minValue, currentValue);
+            var.maxValue = std::max<float>(var.maxValue, currentValue);
             var.lastValue = currentValue;
 
             if (var.mode == ViewMode::WAVEFORM) {
