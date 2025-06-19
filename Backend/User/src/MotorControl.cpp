@@ -7,7 +7,7 @@
 
 // 全局变量定义
 std::atomic<bool> g_running{false};
-std::atomic<float> g_targetTorque{1.5f};
+std::atomic<float> g_targetTorque{0.0f};
 
 float omega_watch = 0.0f;  // 用于监控角度反馈
 float omega_ref = 0.0f;

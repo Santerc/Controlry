@@ -245,7 +245,7 @@ public class MotorComServer : MonoBehaviour
                 // 发送反馈数据
                 SendFeedbackPacket();
                 
-                Thread.Sleep(10);
+                Thread.Sleep(1);
             }
             catch (Exception e)
             {
@@ -361,44 +361,26 @@ public class MotorComServer : MonoBehaviour
         StopTcpServer();
         try
         {
-            // 检查串口是否存在
-            string[] availablePorts = SerialPort.GetPortNames();
-            if (!availablePorts.Contains(serialPortName))
+            // 先清理可能存在的串口连接
+            if (serialPort != null && serialPort.IsOpen)
             {
-                Debug.LogError($"串口 {serialPortName} 不存在！可用串口: {string.Join(", ", availablePorts)}");
-                return;
-            }
-
-            // 确保之前的连接已关闭
-            if (serialPort != null)
-            {
-                if (serialPort.IsOpen)
+                try
                 {
                     serialPort.Close();
+                    serialPort.Dispose();
                 }
-                serialPort.Dispose();
+                catch { }
                 serialPort = null;
             }
 
-            // 创建新的串口连接
-            serialPort = new SerialPort(serialPortName, baudRate, parity, dataBits, stopBits)
-            {
-                ReadTimeout = 1000,
-                WriteTimeout = 1000,
-                DtrEnable = true,  // 启用DTR
-                RtsEnable = true   // 启用RTS
-            };
-
+            serialPort = new SerialPort(serialPortName, baudRate, parity, dataBits, stopBits);
+            serialPort.ReadTimeout = 1000;
+            serialPort.WriteTimeout = 1000;
             serialPort.Open();
-        
-            if (!serialPort.IsOpen)
-            {
-                throw new Exception("Failed to open serial port");
-            }
-
+            
             running = true;
             shouldRun = true;
-            Debug.Log($"✓ RS485 已连接: {serialPortName} @ {baudRate} baud");
+            Debug.Log($"✓ RS485 connection opened on {serialPortName} at {baudRate} baud");
 
             commThread = new Thread(RS485CommLoop);
             commThread.IsBackground = true;
@@ -406,11 +388,11 @@ public class MotorComServer : MonoBehaviour
         }
         catch (Exception e)
         {
-            Debug.LogError($"✗ RS485 连接失败: {e.Message}\n{e.StackTrace}");
-        
+            Debug.LogError($"✗ Failed to start RS485: {e.Message}");
+            
             if (shouldRun)
             {
-                Debug.Log($"{reconnectDelay} 秒后重试连接...");
+                Debug.Log($"Will retry RS485 connection in {reconnectDelay} seconds...");
                 Invoke("StartRS485", reconnectDelay);
             }
         }
@@ -419,13 +401,11 @@ public class MotorComServer : MonoBehaviour
     void RS485CommLoop()
     {
         Debug.Log("RS485 Communication started");
-        Debug.Log($"shouldRun: {shouldRun}");
 
         while (running && shouldRun)
         {
             try
             {
-                Debug.LogWarning("Testing RS485 communication...");
                 if (serialPort == null || !serialPort.IsOpen)
                 {
                     Debug.LogWarning("RS485 serial port closed");
@@ -445,7 +425,7 @@ public class MotorComServer : MonoBehaviour
                 // 发送反馈数据
                 SendFeedbackPacket();
                 
-                Thread.Sleep(10);
+                Thread.Sleep(1);
             }
             catch (TimeoutException)
             {
@@ -573,8 +553,6 @@ public class MotorComServer : MonoBehaviour
             return;
         }
 
-        Debug.Log(serialPort.IsOpen);
-
         try
         {
             byte[] packet = new byte[FEEDBACK_PACKET_SIZE];
@@ -603,7 +581,6 @@ public class MotorComServer : MonoBehaviour
             }
             else
             {
-                Debug.Log("here");
                 serialPort.Write(packet, 0, packet.Length);
             }
         }
