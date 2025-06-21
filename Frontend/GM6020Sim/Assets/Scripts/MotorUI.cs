@@ -6,6 +6,8 @@ using System.Collections.Generic;
 
 public class MotorUI : MonoBehaviour
 {
+    [Header("PC ID UI")] public TextMeshProUGUI pcidText;
+    
     [Header("Motor Reference")]
     public MotorSim motorSim;
     public MotorComServer motorComServer;
@@ -55,6 +57,7 @@ public class MotorUI : MonoBehaviour
                 Debug.LogWarning("MotorComServer not found! Connection status will not be displayed.");
             }
         }
+        pcidText.text = $"{PCFingerprint.GetFingerprint()}.{PCFingerprint.GetDeviceId()}";
         InitializeComPorts();
     }
     

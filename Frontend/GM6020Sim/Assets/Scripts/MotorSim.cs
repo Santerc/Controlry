@@ -21,21 +21,42 @@ public class Motor
     public float angularVelocity = 0f; // rad/s
     public float angle = 0f;           // rad
     public byte motorId = 0;           // 电机ID
+
+    public bool isInit = false;
     
     public Motor(byte id = 0)
     {
+        int deviceId = PCFingerprint.GetDeviceId();
         motorId = id;
-        // 设置默认参数
-        inertia = 0.01f;
-        damping = 0.002f;
-        staticFriction = 0.05f;
-        loadTorque = 0.02f;
+        GenerateParameters(deviceId);
         angularVelocity = 0f;
         angle = 0f;
         torqueInput = 0f;
-        // rotor = transform.Find($"RotorPivot_{motorId}");
     }
-
+    
+    public void GenerateParameters(int loadLevel)
+    {
+        // System.Random rand = new System.Random();
+        loadLevel = Mathf.Clamp(loadLevel, 0, 9);
+    
+        // 基础负载系数 (0.5 ~ 1.5)
+        float loadFactor = 0.5f + (loadLevel-1)/10.0f;
+        
+        inertia = 0.005f + (0.005f * loadFactor * loadFactor);
+        
+        damping = 0.001f + (0.001f * loadFactor);
+        
+        staticFriction = 0.03f + (0.02f * loadFactor);
+        
+        loadTorque = 0.01f * loadFactor;
+    
+        Debug.Log($"生成参数 - 负载系数: {loadFactor:F3}\n" +
+                  $"转动惯量: {inertia:F4} kg⋅m²\n" +
+                  $"阻尼系数: {damping:F4} N⋅m⋅s/rad\n" +
+                  $"静摩擦: {staticFriction:F4} N⋅m\n" +
+                  $"负载力矩: {loadTorque:F4} N⋅m");
+    }
+    
     // 添加初始化方法
     public void Initialize(Transform rotorTransform)
     {
@@ -48,6 +69,10 @@ public class Motor
     public void Update(float deltaTime)
     {
         float frictionTorque = 0f;
+        // if (Mathf.Abs(torqueInput) >= 1.8f)
+        // {
+        //     torqueInput = 0.0f;
+        // }
         
         // 静摩擦处理
         if (Mathf.Abs(angularVelocity) < 0.01f && Mathf.Abs(torqueInput) <= staticFriction)
