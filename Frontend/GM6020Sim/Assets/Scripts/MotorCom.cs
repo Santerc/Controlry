@@ -605,7 +605,7 @@ public class MotorComServer : MonoBehaviour
         Debug.Log($"转换后的力矩值: {torqueValue:F3} Nm");
 
         // 更新MotorSim的输入力矩
-        motorSim.motors[motorId].torqueInput = torqueValue;
+        motorSim.motors[motorId].torqueInput = Mathf.Clamp(torqueValue, -1.8f, 1.8f);
         Debug.Log($"Motor Torque Input: {motorSim.motors[motorId].torqueInput}");
     }
 
